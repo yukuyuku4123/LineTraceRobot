@@ -22,12 +22,15 @@ double Distance = 0;
 void beginBuzzer();
 void startBuzzer();
 void stopBuzzer();
-void readLight();
+int readLight();
 void start();
 void stop();
-void move();
-void readLine();
-void readForward();
+void forward();
+void brake();
+void left();
+void right();
+int readLine();
+int readForward();
 
 void setup() {
   // put your setup code here, to run once:
@@ -45,6 +48,9 @@ void setup() {
   pinMode(Line1, INPUT);
   pinMode(Line2, INPUT);
 
+  digitalWrite(MD1, LOW);
+  digitalWrite(MD2, LOW);
+
   beginBuzzer();
 }
 
@@ -60,8 +66,30 @@ void loop() {
     }
   }
   if (startFlag == true) {
-    readLight();
-    readForward();
+    if (readLight() == 1) {
+      digitalWrite(LED2, HIGH);
+    } else {
+      digitalWrite(LED2, LOW);
+    }
+    if (readForward() == 1) {
+      brake(); 
+    } else {
+      switch (readLine()) {
+        case 0:
+          forward();
+          break;
+        case 1:
+          right();
+          break;
+        case 2:
+          left();
+          break;
+        case 3:
+          forward();
+          break;
+      }
+     ;
+    }
   } else if (startFlag == false) {
     ;
   }
@@ -130,11 +158,11 @@ void stopBuzzer() {
   delay(400);
 }
 
-void readLight() {
+int readLight() {
   if (digitalRead(Light) == HIGH) {
-    digitalWrite(LED2, HIGH);
+    return 1;
   } else {
-    digitalWrite(LED2, LOW);
+    return 0;
   }
 }
 
@@ -148,7 +176,7 @@ void stop() {
   stopBuzzer();
 }
 
-void readForward() {
+int readForward() {
   digitalWrite(Trig, LOW); 
   delayMicroseconds(2); 
   digitalWrite(Trig, HIGH);
@@ -161,6 +189,50 @@ void readForward() {
     Serial.print("Distance:");
     Serial.print(Distance);
     Serial.println(" cm");
+    if (Distance < 20) {
+      tone(Buzzer, 392, 200);
+      delay(100);
+      noTone(Buzzer);
+      return 1;
+    }
   }
-  delay(500);
+  delay(100);
+  return 0;
+}
+
+int readLine() {
+  if (digitalRead(Line1) == HIGH && digitalRead(Line2) == LOW) {
+    return 1;
+  } else if (digitalRead(Line1) == LOW && digitalRead(Line2) == HIGH) {
+    return 2;
+  } else if (digitalRead(Line1) == HIGH && digitalRead(Line2) == HIGH) {
+    return 3;
+  } else if (digitalRead(Line1) == LOW && digitalRead(Line2) == LOW) {
+    return 3;
+  }
+  return 0;
+}
+
+void brake() {
+  digitalWrite(MD1, LOW);
+  digitalWrite(MD2, LOW);
+  digitalWrite(LED3, LOW);
+}
+
+void forward() {
+  analogWrite(MD1, 30);
+  analogWrite(MD2, 30);
+  digitalWrite(LED3, HIGH);
+}
+
+void left() {
+  digitalWrite(MD1, LOW);
+  analogWrite(MD2, 30);
+  digitalWrite(LED3, HIGH);
+}
+
+void right() {    
+  analogWrite(MD1, 30);
+  digitalWrite(MD2, LOW);
+  digitalWrite(LED3, HIGH);
 }
