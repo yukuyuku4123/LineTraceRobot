@@ -19,6 +19,9 @@ bool startFlag = false;
 double Duration = 0;
 double Distance = 0; 
 
+bool leftFlag = false;
+bool rightFlag = false;
+
 void beginBuzzer();
 void startBuzzer();
 void stopBuzzer();
@@ -76,17 +79,31 @@ void loop() {
     } else {
       switch (readLine()) {
         case 0:
+          leftFlag = false;
+          rightFlag = false;
           forward();
           break;
-        case 1:
+        case 3:
+          leftFlag = false;
+          rightFlag = true;
           right();
           break;
         case 2:
+          leftFlag = true;
+          rightFlag = false;
           left();
           break;
-        case 3:
-          forward();
-          break;
+        case 1:
+          if (leftFlag == true && rightFlag == false) {
+            left();
+            break;
+          } else if (leftFlag == false && rightFlag == true) {
+            right();
+            break;
+          } else {
+            forward();
+            break;
+          }
       }
      ;
     }
@@ -173,6 +190,10 @@ void start() {
 
 void stop() {
   digitalWrite(LED1, LOW);
+  digitalWrite(LED2, LOW);
+  digitalWrite(LED3, LOW);
+  digitalWrite(MD1, LOW);
+  digitalWrite(MD2, LOW);
   stopBuzzer();
 }
 
@@ -189,7 +210,7 @@ int readForward() {
     Serial.print("Distance:");
     Serial.print(Distance);
     Serial.println(" cm");
-    if (Distance < 20) {
+    if (Distance < 10) {
       tone(Buzzer, 392, 200);
       delay(100);
       noTone(Buzzer);
@@ -201,16 +222,38 @@ int readForward() {
 }
 
 int readLine() {
-  if (digitalRead(Line1) == HIGH && digitalRead(Line2) == LOW) {
-    return 1;
-  } else if (digitalRead(Line1) == LOW && digitalRead(Line2) == HIGH) {
-    return 2;
-  } else if (digitalRead(Line1) == HIGH && digitalRead(Line2) == HIGH) {
-    return 3;
-  } else if (digitalRead(Line1) == LOW && digitalRead(Line2) == LOW) {
-    return 3;
+  int LINE1 = analogRead(Line1);
+  int LINE2 = analogRead(Line2);
+  int LN1 = 0;
+  int LN2 = 0;
+  Serial.print("LINE1:");
+  Serial.println(LINE1);
+  Serial.print("LINE2:");
+  Serial.println(LINE2);
+
+  if (LINE1 < 9) {
+    LN1 = 1;
+  } else {
+    LN1 = 0;
   }
-  return 0;
+  if (LINE2 < 9) {
+    LN2 = 1;
+  } else {
+    LN2 = 0;
+  }
+
+  if (LN1 == 1 && LN2 == 1) {
+    leftFlag = false;
+    rightFlag = false;
+    return 0;
+  } else if (LN1 == 1 && LN2 == 0) {
+    return 2;
+  } else if (LN1 == 0 && LN2 == 1) {
+    return 3;
+  } else if (LN1 == 0 && LN2 == 0) {
+    return 1;
+  }
+  return 1;
 }
 
 void brake() {
@@ -227,12 +270,12 @@ void forward() {
 
 void left() {
   digitalWrite(MD1, LOW);
-  analogWrite(MD2, 30);
+  analogWrite(MD2, 20);
   digitalWrite(LED3, HIGH);
 }
 
 void right() {    
-  analogWrite(MD1, 30);
+  analogWrite(MD1, 20);
   digitalWrite(MD2, LOW);
   digitalWrite(LED3, HIGH);
 }
